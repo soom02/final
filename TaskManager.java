@@ -168,11 +168,51 @@ public class TaskManager extends JFrame {
         getContentPane().removeAll();
 
         setLayout(new BorderLayout());
-        JLabel planLabel = new JLabel("채팅", SwingConstants.CENTER);
-        planLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
-        add(planLabel, BorderLayout.CENTER);
+        JLabel chatLabel = new JLabel(" 채팅", SwingConstants.LEFT);
+        chatLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
+        chatLabel.setForeground(Color.WHITE);
+        chatLabel.setBackground(pColor);
+        chatLabel.setOpaque(true);
+        add(chatLabel, BorderLayout.NORTH);
 
-        // 채팅 화면만 구현, 기능x
+        // 채팅 내용 패널
+        JPanel chatContentPanel = new JPanel();
+        chatContentPanel.setLayout(new BoxLayout(chatContentPanel, BoxLayout.Y_AXIS));
+
+        // 단톡방 추가
+        JPanel message1 = createMessagePanel("▶ 자바 조별과제 (4)", "   확인하고 의견 주세용");
+        JPanel message2 = createMessagePanel("▶ 운영체제 조별과제 (5)", "   넵 수정하고 보내드릴게요");
+
+        // 단톡방 클릭 (이거 수정)
+        addMouseHoverEffect(message1, "자바 조별과제 (4)", "과제 세부 내용이나 의견을 여기에 작성하세요.");
+        addMouseHoverEffect(message2, "운영체제 조별과제 (5)", "과제 세부 내용이나 의견을 여기에 작성하세요.");
+
+        // 단톡방 크기 설정
+        message1.setPreferredSize(new Dimension(400, 80));
+        message1.setMaximumSize(new Dimension(400, 80));
+        message2.setPreferredSize(new Dimension(400, 80));
+        message2.setMaximumSize(new Dimension(400, 80));
+
+        chatContentPanel.add(message1);
+        chatContentPanel.add(message2);
+        chatContentPanel.add(Box.createVerticalGlue());
+
+        // 스크롤 가능
+        JScrollPane chatScrollPane = new JScrollPane(chatContentPanel);
+        chatScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        chatScrollPane.setPreferredSize(new Dimension(300, 400));
+        add(chatScrollPane, BorderLayout.CENTER);
+
+        // 새로운 채팅방 개설 버튼 추가
+        chatContentPanel.add(Box.createRigidArea(new Dimension(0, 200)));
+        JButton newChatButton = new JButton("새로운 채팅방 개설");
+        newChatButton.setPreferredSize(new Dimension(250, 60));
+        newChatButton.setBackground(pColor);
+        newChatButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel createChatRoomPanel = new JPanel();
+        createChatRoomPanel.add(newChatButton);
+        chatContentPanel.add(createChatRoomPanel);
 
         // 하단 버튼 추가
         JPanel buttonPanel = new JPanel();
@@ -180,7 +220,6 @@ public class TaskManager extends JFrame {
         JButton planButton = new JButton("계획");
         JButton chatButton = new JButton("채팅");
 
-        // 현재 화면의 버튼 비활성화
         chatButton.setEnabled(false); // 비활성화
 
         // 버튼 클릭 이동
@@ -196,6 +235,42 @@ public class TaskManager extends JFrame {
         revalidate();
         repaint();
     }
+
+    // 메세지 패널 생성
+    private JPanel createMessagePanel(String title, String message) {
+        JPanel messagePanel = new JPanel();
+        messagePanel.setLayout(new BorderLayout());
+        messagePanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+        messagePanel.setBackground(Color.WHITE);
+
+        // 제목 레이블
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16));
+        messagePanel.add(titleLabel, BorderLayout.NORTH);
+
+        // 메시지 레이블
+        JLabel messageLabel = new JLabel(message);
+        messageLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+        messagePanel.add(messageLabel, BorderLayout.CENTER);
+
+        return messagePanel;
+    }
+
+    // 패널에 마우스
+    private void addMouseHoverEffect(JPanel panel, String title, String message) {
+        panel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                panel.setBackground(new Color(255, 200, 200)); // 배경색 변경
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                panel.setBackground(Color.WHITE); // 원래 색으로 복구
+            }
+        });
+    }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new TaskManager());

@@ -1,19 +1,21 @@
 import javax.swing.*;
-import javax.swing.table.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.HashMap;
 
 public class TaskManager extends JFrame {
 
+    private String nickname; // 사용자 이름
     private JTextField nicknameField;
     private Color pColor = new Color(255, 133, 180);
-    private String nickname; // 사용자 닉네임
-    private JLabel selectedCourseLabel; // 클릭한 과목을 표시할 레이블
-    private JTextArea detailArea; // 과목 세부 정보 표시할 텍스트 영역
 
-    // 과목 세부 정보 저장
-    private HashMap<String, String[]> courseDetails;
+    // 시간표 화면 사용
+    private JTextArea detailArea;
+    private HashMap<String, String[]> courseDetails; // 과목 세부 정보 저장
 
     TaskManager() {
         // 기본 창 설정
@@ -69,6 +71,7 @@ public class TaskManager extends JFrame {
     // 과목 세부 정보 초기화
     private void initializeCourseDetails() {
         courseDetails = new HashMap<>();
+
         courseDetails.put("알고리즘설계", new String[]{"OOO 교수님", "화1-3, 06-408"});
         courseDetails.put("GUI프로그래밍", new String[]{"OOO 교수님", "수1-3, 06-408"});
         courseDetails.put("JAVA프로그래밍2", new String[]{"남수만 교수님", "수5-7, 06-310"});
@@ -82,16 +85,11 @@ public class TaskManager extends JFrame {
         setLayout(new BorderLayout());
         setTitle(nickname + "님의 Task Manager");
 
-        // 닉네임 레이블 추가
+        // 닉네임 레이블
         JLabel timetableLabel = new JLabel(nickname + "님의 시간표", SwingConstants.CENTER);
         timetableLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
         timetableLabel.setForeground(Color.BLACK);
         add(timetableLabel, BorderLayout.NORTH);
-
-        // 클릭한 과목을 표시할 레이블 추가
-        selectedCourseLabel = new JLabel("클릭한 과목이 여기에 표시됩니다.", SwingConstants.CENTER);
-        selectedCourseLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 18));
-        add(selectedCourseLabel, BorderLayout.SOUTH);
 
         // 시간표 생성
         String[] columnNames = {"시간", "월", "화", "수", "목", "금"};
@@ -114,19 +112,6 @@ public class TaskManager extends JFrame {
                 return false;
             }
         };
-
-        // 셀 클릭 이벤트 리스너 추가
-        timetable.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                int row = timetable.rowAtPoint(e.getPoint());
-                int column = timetable.columnAtPoint(e.getPoint());
-                String cellValue = (String) timetable.getValueAt(row, column);
-                if (cellValue != null) {
-                    displayCourseDetails(cellValue); // 세부 정보 표시
-                }
-            }
-        });
 
         // 테이블 스타일 설정
         timetable.setRowHeight(40);
@@ -161,20 +146,43 @@ public class TaskManager extends JFrame {
         mainPanel.add(timetableScrollPane, BorderLayout.CENTER);
         mainPanel.add(detailScrollPane, BorderLayout.SOUTH);
 
+        // 셀 클릭 이벤트 리스너 추가
+        timetable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = timetable.rowAtPoint(e.getPoint());
+                int column = timetable.columnAtPoint(e.getPoint());
+                String cellValue = (String) timetable.getValueAt(row, column);
+                if (cellValue != null) {
+                    displayCourseDetails(cellValue); // 세부 정보 표시
+                }
+            }
+        });
+
         // 하단 버튼 추가
-        JPanel buttonPanel = new JPanel();
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton timetableButton = new JButton("시간표");
-        JButton planButton = new JButton("계획");
+        JButton taskButton = new JButton("과제");
         JButton chatButton = new JButton("채팅");
+
+        // 버튼 크기 통일
+        Dimension buttonSize = new Dimension(100, 35);
+        timetableButton.setPreferredSize(buttonSize);
+        taskButton.setPreferredSize(buttonSize);
+        chatButton.setPreferredSize(buttonSize);
+
+        timetableButton.setBackground(pColor);
+        taskButton.setBackground(pColor);
+        chatButton.setBackground(pColor);
 
         timetableButton.setEnabled(false); // 비활성화
 
         // 버튼 클릭 이동
-        planButton.addActionListener(e -> showPlanScreen());
+        taskButton.addActionListener(e -> showTaskScreen());
         chatButton.addActionListener(e -> showChatScreen());
 
         buttonPanel.add(timetableButton);
-        buttonPanel.add(planButton);
+        buttonPanel.add(taskButton);
         buttonPanel.add(chatButton);
         add(buttonPanel, BorderLayout.SOUTH);
 
@@ -185,17 +193,17 @@ public class TaskManager extends JFrame {
         repaint();
     }
 
-    // 과목 세부 정보 표시
+    // 과목 세부 정보 표시 메소드
     private void displayCourseDetails(String courseName) {
         String[] details = courseDetails.get(courseName);
         if (details != null) {
             StringBuilder info = new StringBuilder();
             info.append(courseName).append("\n");
             if (details.length > 0) {
-                info.append("교수: ").append(details[0]).append("\n");
+                info.append("교수 : ").append(details[0]).append("\n");
             }
             if (details.length > 1) {
-                info.append("강의시간 및 강의실: ").append(details[1]).append("\n");
+                info.append("강의시간 및 강의실 : ").append(details[1]).append("\n");
             }
             detailArea.setText(info.toString());
         } else {
@@ -203,32 +211,45 @@ public class TaskManager extends JFrame {
         }
     }
 
-    // 계획 화면
-    private void showPlanScreen() {
+    // 과제 화면
+    private void showTaskScreen() {
         getContentPane().removeAll();
-
-        // 타이틀 레이블
         setLayout(new BorderLayout());
-        JLabel planLabel = new JLabel(nickname + "님의 계획 화면", SwingConstants.CENTER);
-        planLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
-        add(planLabel, BorderLayout.CENTER);
 
-        // 오늘의 계획, 전체 계획, 계획 추가 수정 삭제... 기능
+        // 타이틀 패널
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        titlePanel.setPreferredSize(new Dimension(440, 50));
+        JLabel planLabel = new JLabel(nickname + "님의 과제");
+        planLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
+        titlePanel.add(planLabel);
+        add(titlePanel);
+
+        // 기능 인터페이스 추가
 
         // 하단 버튼 추가
-        JPanel buttonPanel = new JPanel();
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton timetableButton = new JButton("시간표");
-        JButton planButton = new JButton("계획");
+        JButton taskButton = new JButton("과제");
         JButton chatButton = new JButton("채팅");
 
-        planButton.setEnabled(false); // 비활성화
+        // 버튼 크기 통일
+        Dimension buttonSize = new Dimension(100, 35);
+        timetableButton.setPreferredSize(buttonSize);
+        taskButton.setPreferredSize(buttonSize);
+        chatButton.setPreferredSize(buttonSize);
+
+        timetableButton.setBackground(pColor);
+        taskButton.setBackground(pColor);
+        chatButton.setBackground(pColor);
+
+        taskButton.setEnabled(false); // 비활성화
 
         // 버튼 클릭 이동
         timetableButton.addActionListener(e -> showTimetableScreen());
         chatButton.addActionListener(e -> showChatScreen());
 
         buttonPanel.add(timetableButton);
-        buttonPanel.add(planButton);
+        buttonPanel.add(taskButton);
         buttonPanel.add(chatButton);
         add(buttonPanel, BorderLayout.SOUTH);
 
@@ -237,12 +258,14 @@ public class TaskManager extends JFrame {
         repaint();
     }
 
+    // 기능 메소드 추가
+
     // 채팅 화면
     private void showChatScreen() {
         getContentPane().removeAll();
+        setLayout(new BorderLayout());
 
         // 타이틀 레이블
-        setLayout(new BorderLayout());
         JLabel chatLabel = new JLabel(" 채팅", SwingConstants.LEFT);
         chatLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
         chatLabel.setForeground(Color.WHITE);
@@ -254,11 +277,10 @@ public class TaskManager extends JFrame {
         JPanel chatContentPanel = new JPanel();
         chatContentPanel.setLayout(new BoxLayout(chatContentPanel, BoxLayout.Y_AXIS));
 
-        // 단톡방 추가
+        // 채팅방 추가
         JPanel message1 = createMessagePanel("▶ 자바 조별과제 (4)", "   확인하고 의견 주세용");
         JPanel message2 = createMessagePanel("▶ 운영체제 조별과제 (5)", "   넵 수정하고 보내드릴게요");
 
-        // 단톡방 크기 설정
         message1.setPreferredSize(new Dimension(400, 80));
         message1.setMaximumSize(new Dimension(400, 80));
         message2.setPreferredSize(new Dimension(400, 80));
@@ -268,7 +290,7 @@ public class TaskManager extends JFrame {
         chatContentPanel.add(message2);
         chatContentPanel.add(Box.createVerticalGlue());
 
-        // 단톡방 마우스 상호작용
+        // 채팅방 마우스 인터랙션
         addMouseHoverEffect(message1);
         addMouseHoverEffect(message2);
 
@@ -278,9 +300,9 @@ public class TaskManager extends JFrame {
         chatScrollPane.setPreferredSize(new Dimension(300, 400));
         add(chatScrollPane, BorderLayout.CENTER);
 
-        // 새로운 채팅방 개설 버튼 추가
+        // 새로운 채팅방 개설 버튼 추가 - 기능 X
         chatContentPanel.add(Box.createRigidArea(new Dimension(0, 200)));
-        JButton newChatButton = new JButton("새로운 채팅방 개설");
+        JButton newChatButton = new JButton("+ 새로운 채팅방 개설");
         newChatButton.setPreferredSize(new Dimension(250, 60));
         newChatButton.setBackground(pColor);
         newChatButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -290,19 +312,29 @@ public class TaskManager extends JFrame {
         chatContentPanel.add(createChatRoomPanel);
 
         // 하단 버튼 추가
-        JPanel buttonPanel = new JPanel();
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton timetableButton = new JButton("시간표");
-        JButton planButton = new JButton("계획");
+        JButton taskButton = new JButton("과제");
         JButton chatButton = new JButton("채팅");
+
+        // 버튼 크기 통일
+        Dimension buttonSize = new Dimension(100, 35);
+        timetableButton.setPreferredSize(buttonSize);
+        taskButton.setPreferredSize(buttonSize);
+        chatButton.setPreferredSize(buttonSize);
+
+        timetableButton.setBackground(pColor);
+        taskButton.setBackground(pColor);
+        chatButton.setBackground(pColor);
 
         chatButton.setEnabled(false); // 비활성화
 
         // 버튼 클릭 이동
         timetableButton.addActionListener(e -> showTimetableScreen());
-        planButton.addActionListener(e -> showPlanScreen());
+        taskButton.addActionListener(e -> showTaskScreen());
 
         buttonPanel.add(timetableButton);
-        buttonPanel.add(planButton);
+        buttonPanel.add(taskButton);
         buttonPanel.add(chatButton);
         add(buttonPanel, BorderLayout.SOUTH);
 
@@ -345,7 +377,6 @@ public class TaskManager extends JFrame {
             }
         });
     }
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new TaskManager());

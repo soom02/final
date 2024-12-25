@@ -1,21 +1,22 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.HashMap;
+import java.awt.event.*;
+import java.util.*;
+import java.io.*;
 
 public class TaskManager extends JFrame {
 
     private String nickname; // 사용자 이름
     private JTextField nicknameField;
-    private Color pColor = new Color(255, 133, 180);
+    private Color pColor = new Color(255, 133, 180); // 메인 컬러
 
     // 시간표 화면 사용
     private JTextArea detailArea;
     private HashMap<String, String[]> courseDetails; // 과목 세부 정보 저장
+
+    // 과제 화면 사용
+    private ArrayList<Task> tasks; // 과제 목록
 
     TaskManager() {
         // 기본 창 설정
@@ -64,6 +65,9 @@ public class TaskManager extends JFrame {
 
         // 과목 세부 정보 초기화
         initializeCourseDetails();
+
+        // 과제 목록 초기화
+        tasks = new ArrayList<>();
 
         setVisible(true);
     }
@@ -222,9 +226,44 @@ public class TaskManager extends JFrame {
         JLabel planLabel = new JLabel(nickname + "님의 과제");
         planLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
         titlePanel.add(planLabel);
-        add(titlePanel);
+        add(titlePanel, BorderLayout.NORTH);
 
-        // 기능 인터페이스 추가
+        // 과제 추가
+        JPanel inputPanel = new JPanel();
+        String[] subjects = {"알고리즘설계", "GUI프로그래밍", "JAVA프로그래밍2", "운영체제", "ENGLISH3"};
+        JComboBox<String> subjectComboBox = new JComboBox<>(subjects);
+        JTextField descriptionField = new JTextField(10);
+        JTextField dueDateField = new JTextField(10);
+        JButton addButton = new JButton("과제 추가");
+
+        inputPanel.add(new JLabel("과목:"));
+        inputPanel.add(subjectComboBox);
+        inputPanel.add(new JLabel("설명:"));
+        inputPanel.add(descriptionField);
+        inputPanel.add(new JLabel("마감일:"));
+        inputPanel.add(dueDateField);
+        inputPanel.add(addButton);
+
+        add(inputPanel, BorderLayout.NORTH);
+
+        // 과제 목록
+        JTextArea taskArea = new JTextArea();
+        taskArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(taskArea);
+        scrollPane.setPreferredSize(new Dimension(400, 200));
+        add(scrollPane, BorderLayout.CENTER);
+
+        addButton.addActionListener(e -> {
+            String selectedSubject = (String) subjectComboBox.getSelectedItem();
+            String description = descriptionField.getText();
+            String dueDate = dueDateField.getText();
+            addTask(selectedSubject, description, dueDate);
+            descriptionField.setText("");
+            dueDateField.setText("");
+            updateTaskArea(taskArea); // 과제 목록 업데이트
+        });
+
+        updateTaskArea(taskArea);
 
         // 하단 버튼 추가
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -258,7 +297,70 @@ public class TaskManager extends JFrame {
         repaint();
     }
 
-    // 기능 메소드 추가
+    // 과제 추가 메서드
+    private void addTask(String name, String description, String dueDate) {
+        tasks.add(new Task(name, description, dueDate));
+        saveTasksToFile();
+    }
+
+    // 과제 수정 메서드
+    private void updateTaskArea(int index, String name, String description, String dueDate) {
+        if (index >= 0 && index < tasks.size()) {
+            tasks.get(index).setName(name);
+            tasks.get(index).setDescription(description);
+            tasks.get(index).setDueDate(dueDate);
+            saveTasksToFile();
+        }
+    }
+
+    // 과제 목록 수정 메서드
+    private void updateTaskArea(JTextArea area) {
+        area.setText(""); // 기존 내용 지우기
+        for (Task task : tasks) {
+            area.append(task.toString() + "\n");
+        }
+    }
+
+    // 과제 삭제 메서드
+    private void deleteTask(int index) {
+        if (index >= 0 && index < tasks.size()) {
+            tasks.remove(index);
+            saveTasksToFile();
+        }
+    }
+
+    // 저장 및 불러오기 메서드
+    private void saveTasksToFile() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("tasks.txt"))) {
+            for (Task task : tasks) {
+                writer.write(task.getName() + "," + task.getDescription() + "," + task.getDueDate());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadTasksFromFile() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("tasks.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 3) {
+                    addTask(parts[0], parts[1], parts[2]);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            // 파일이 없으면 새로 생성
+            try {
+                new FileWriter("tasks.txt"); // 빈 파일 생성
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     // 채팅 화면
     private void showChatScreen() {
@@ -379,6 +481,10 @@ public class TaskManager extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new TaskManager());
+        SwingUtilities.invokeLater(() -> {
+            TaskManager manager = new TaskManager();
+            manager.loadTasksFromFile(); // 프로그램 시작 시 과제 불러오기
+        });
     }
+
 }

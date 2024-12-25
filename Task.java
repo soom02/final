@@ -1,5 +1,5 @@
 public class Task {
-    private String name; // 과제 이름
+    private String name; // 과목 이름
     private String description; // 과제 설명
     private String dueDate; // 마감일
 

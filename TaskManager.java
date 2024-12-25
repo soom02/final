@@ -2,7 +2,9 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.io.*;
 
 public class TaskManager extends JFrame {
@@ -89,10 +91,10 @@ public class TaskManager extends JFrame {
         setLayout(new BorderLayout());
         setTitle(nickname + "님의 Task Manager");
 
-        // 닉네임 레이블
+        // 타이틀 레이블
         JLabel timetableLabel = new JLabel(nickname + "님의 시간표", SwingConstants.CENTER);
         timetableLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
-        timetableLabel.setForeground(Color.BLACK);
+        timetableLabel.setForeground(pColor);
         add(timetableLabel, BorderLayout.NORTH);
 
         // 시간표 생성
@@ -104,11 +106,11 @@ public class TaskManager extends JFrame {
             data[i][0] = String.valueOf(i + 1); // 1~9 교시
         }
 
-        data[0][2] = "알고리즘설계"; data[1][2] = "알고리즘설계"; data[2][2] = "알고리즘설계";
-        data[0][3] = "GUI프로그래밍"; data[1][3] = "GUI프로그래밍"; data[2][3] = "GUI프로그래밍";
-        data[4][3] = "JAVA프로그래밍2"; data[5][3] = "JAVA프로그래밍2"; data[6][3] = "JAVA프로그래밍2";
-        data[0][5] = "운영체제"; data[1][5] = "운영체제"; data[2][5] = "운영체제";
-        data[3][5] = "ENGLISH3"; data[4][5] = "ENGLISH3";
+        data[0][2] = "알고리즘설계";        data[1][2] = "알고리즘설계";        data[2][2] = "알고리즘설계";
+        data[0][3] = "GUI프로그래밍";        data[1][3] = "GUI프로그래밍";        data[2][3] = "GUI프로그래밍";
+        data[4][3] = "JAVA프로그래밍2";        data[5][3] = "JAVA프로그래밍2";        data[6][3] = "JAVA프로그래밍2";
+        data[0][5] = "운영체제";        data[1][5] = "운영체제";        data[2][5] = "운영체제";
+        data[3][5] = "ENGLISH3";        data[4][5] = "ENGLISH3";
 
         JTable timetable = new JTable(data, columnNames) {
             @Override
@@ -197,22 +199,43 @@ public class TaskManager extends JFrame {
         repaint();
     }
 
-    // 과목 세부 정보 표시 메소드
+    // 과목 세부사항 출력 메서드
     private void displayCourseDetails(String courseName) {
         String[] details = courseDetails.get(courseName);
+        StringBuilder info = new StringBuilder();
+
+        info.append(courseName).append("\n");
         if (details != null) {
-            StringBuilder info = new StringBuilder();
-            info.append(courseName).append("\n");
             if (details.length > 0) {
                 info.append("교수 : ").append(details[0]).append("\n");
             }
             if (details.length > 1) {
                 info.append("강의시간 및 강의실 : ").append(details[1]).append("\n");
             }
-            detailArea.setText(info.toString());
-        } else {
-            detailArea.setText("세부 정보를 찾을 수 없습니다.");
         }
+
+        // 과목 해당 과제 추가
+        List<Task> courseTasks = getTasksForCourse(courseName);
+        if (!courseTasks.isEmpty()) {
+            info.append("과제 목록 :\n");
+            for (Task task : courseTasks) {
+                info.append("- ").append(task.getDescription()).append(" (마감일 : ").append(task.getDueDate()).append(")\n");
+            }
+        } else {
+            info.append("과제 목록 : \n" + "과제가 없습니다.\n");
+        }
+        detailArea.setText(info.toString());
+    }
+
+    // 과목 과제 확인
+    private List<Task> getTasksForCourse(String courseName) {
+        List<Task> courseTasks = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task.getName().equals(courseName)) {
+                courseTasks.add(task);
+            }
+        }
+        return courseTasks;
     }
 
     // 과제 화면
@@ -220,39 +243,51 @@ public class TaskManager extends JFrame {
         getContentPane().removeAll();
         setLayout(new BorderLayout());
 
-        // 타이틀 패널
-        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        titlePanel.setPreferredSize(new Dimension(440, 50));
-        JLabel planLabel = new JLabel(nickname + "님의 과제");
-        planLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
-        titlePanel.add(planLabel);
-        add(titlePanel, BorderLayout.NORTH);
+        // 타이틀 레이블
+        JLabel taskLabel = new JLabel(nickname + "님의 과제", SwingConstants.CENTER);
+        taskLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
+        taskLabel.setForeground(pColor);
+        add(taskLabel, BorderLayout.NORTH);
 
-        // 과제 추가
+        // 과제 추가 패널
         JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
+
         String[] subjects = {"알고리즘설계", "GUI프로그래밍", "JAVA프로그래밍2", "운영체제", "ENGLISH3"};
         JComboBox<String> subjectComboBox = new JComboBox<>(subjects);
-        JTextField descriptionField = new JTextField(10);
-        JTextField dueDateField = new JTextField(10);
+        JTextField descriptionField = new JTextField(20);
+        JTextField dueDateField = new JTextField(20);
         JButton addButton = new JButton("과제 추가");
+        JButton deleteButton = new JButton("과제 삭제");
 
-        inputPanel.add(new JLabel("과목:"));
+        inputPanel.add(new JLabel("     과목"));
         inputPanel.add(subjectComboBox);
-        inputPanel.add(new JLabel("설명:"));
+        inputPanel.add(new JLabel("     과제"));
         inputPanel.add(descriptionField);
-        inputPanel.add(new JLabel("마감일:"));
+        inputPanel.add(new JLabel("    마감일"));
         inputPanel.add(dueDateField);
+        inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         inputPanel.add(addButton);
+        inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        inputPanel.add(deleteButton);
 
-        add(inputPanel, BorderLayout.NORTH);
+        inputPanel.setMaximumSize(new Dimension(400, 400));
 
-        // 과제 목록
+        // 메인 패널
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.add(inputPanel);
+
+        // 과제 목록 텍스트 영역
         JTextArea taskArea = new JTextArea();
         taskArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(taskArea);
         scrollPane.setPreferredSize(new Dimension(400, 200));
-        add(scrollPane, BorderLayout.CENTER);
+        mainPanel.add(scrollPane); // 과제 목록을 아래에 추가
 
+        add(mainPanel, BorderLayout.CENTER);
+
+        // 과제 추가 리스너
         addButton.addActionListener(e -> {
             String selectedSubject = (String) subjectComboBox.getSelectedItem();
             String description = descriptionField.getText();
@@ -263,7 +298,7 @@ public class TaskManager extends JFrame {
             updateTaskArea(taskArea); // 과제 목록 업데이트
         });
 
-        updateTaskArea(taskArea);
+        updateTaskArea(taskArea); // 초기 과제 목록 업데이트
 
         // 하단 버튼 추가
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -290,7 +325,7 @@ public class TaskManager extends JFrame {
         buttonPanel.add(timetableButton);
         buttonPanel.add(taskButton);
         buttonPanel.add(chatButton);
-        add(buttonPanel, BorderLayout.SOUTH);
+        add(buttonPanel, BorderLayout.SOUTH); // 하단에 추가
 
         setVisible(true);
         revalidate();
@@ -301,16 +336,6 @@ public class TaskManager extends JFrame {
     private void addTask(String name, String description, String dueDate) {
         tasks.add(new Task(name, description, dueDate));
         saveTasksToFile();
-    }
-
-    // 과제 수정 메서드
-    private void updateTaskArea(int index, String name, String description, String dueDate) {
-        if (index >= 0 && index < tasks.size()) {
-            tasks.get(index).setName(name);
-            tasks.get(index).setDescription(description);
-            tasks.get(index).setDueDate(dueDate);
-            saveTasksToFile();
-        }
     }
 
     // 과제 목록 수정 메서드
@@ -486,5 +511,4 @@ public class TaskManager extends JFrame {
             manager.loadTasksFromFile(); // 프로그램 시작 시 과제 불러오기
         });
     }
-
 }

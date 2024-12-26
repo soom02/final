@@ -7,6 +7,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.io.*;
 
+/**
+ * 시간표, 과제 관리를 할 수 있는 TaskManager 클래스입니다.
+ *
+ * 사용자는 닉네임을 설정하고, 시간표와 과제 목록을 확인할 수 있습니다.
+ * 과목의 세부정보를 확인하거나, 과제 관리 기능도 포함되어 있습니다.
+ * 기능적인 요소는 구현되지 않았으나, 채팅 화면 또한 존재합니다.
+ *
+ * @author 전수민
+ * @version 1.0
+ * @since 1.0
+ */
+
 public class TaskManager extends JFrame {
 
     private String nickname; // 사용자 이름
@@ -20,6 +32,11 @@ public class TaskManager extends JFrame {
     // 과제 화면 사용
     private ArrayList<Task> tasks; // 과제 목록
 
+    /**
+     * TaskManager 생성자입니다.
+     *
+     * 초기 화면을 설정하고, 닉네임 입력 UI를 생성합니다.
+     */
     TaskManager() {
         // 기본 창 설정
         setTitle("Task Manager");
@@ -51,7 +68,11 @@ public class TaskManager extends JFrame {
 
         add(nicknamePanel);
 
-        // 닉네임 입력 시 팝업창 출력 및 메인 화면 이동
+        /**
+         * 닉네임을 입력할 때 사용되는 리스너입니다.
+         *
+         * 환영 인사를 팝업창으로 출력하고 메인 화면으로 이동하게끔 돕습니다.
+         */
         nicknameButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -74,7 +95,12 @@ public class TaskManager extends JFrame {
         setVisible(true);
     }
 
-    // 과목 세부 정보 초기화
+    /**
+     * 과목 세부 정보 초기화하는 메서드입니다.
+     *
+     * 과목별 세부사항을 HashMap에 저장했습니다.
+     * 능력 부족으로 미리 내용을 지정하는 방향으로 구현했습니다.
+     */
     private void initializeCourseDetails() {
         courseDetails = new HashMap<>();
 
@@ -86,6 +112,13 @@ public class TaskManager extends JFrame {
     }
 
     // 시간표 화면 - 메인 화면
+
+    /**
+     * 메인 화면이 될 시간표 화면을 출력하는 메서드입니다.
+     *
+     * 사용자의 시간표와 클릭 시 과목 세부정보를 표시합니다.
+     * 시간표는 능력 부족으로 미리 내용을 지정하는 방향으로 구현했습니다.
+     */
     private void showTimetableScreen() {
         getContentPane().removeAll();
         setLayout(new BorderLayout());
@@ -152,7 +185,11 @@ public class TaskManager extends JFrame {
         mainPanel.add(timetableScrollPane, BorderLayout.CENTER);
         mainPanel.add(detailScrollPane, BorderLayout.SOUTH);
 
-        // 셀 클릭 이벤트 리스너 추가
+        /**
+         * 셀을 클릭할 때 사용되는 리스너입니다.
+         *
+         * 클릭한 시간(셀)에 따라 해당하는 세부사항을 출력하게끔 돕습니다.
+         */
         timetable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -165,6 +202,12 @@ public class TaskManager extends JFrame {
             }
         });
 
+
+        /**
+         * 여러 화면을 이리저리 이동할 수 있도록 만든 버튼 패널입니다.
+         * 자신의 화면에서는 해당 버튼이 눌리지 않도록 설정했습니다.
+         * (예시 : 시간표 화면에서 시간표 버튼 비활성화)
+         */
         // 하단 버튼 추가
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton timetableButton = new JButton("시간표");
@@ -200,6 +243,14 @@ public class TaskManager extends JFrame {
     }
 
     // 과목 세부사항 출력 메서드
+
+    /**
+     * 주어진 과목의 세부사항을 출력하는 메서드입니다.
+     *
+     * 과목의 교수명, 강의시간, 강의실 정보를 포함하며, 과제 추가 시에는 해당 과목의 과제 목록도 함께 출력합니다.
+     *
+     * @param courseName 과목 이름
+     */
     private void displayCourseDetails(String courseName) {
         String[] details = courseDetails.get(courseName);
         StringBuilder info = new StringBuilder();
@@ -227,7 +278,12 @@ public class TaskManager extends JFrame {
         detailArea.setText(info.toString());
     }
 
-    // 과목 과제 확인
+    /**
+     * 주어진 과목의 과제를 확인하고 해당 내용을 반환하는 메서드입니다.
+     *
+     * @param courseName 과목 이름
+     * @return 해당 과목의 과제 목록
+     */
     private List<Task> getTasksForCourse(String courseName) {
         List<Task> courseTasks = new ArrayList<>();
         for (Task task : tasks) {
@@ -238,6 +294,11 @@ public class TaskManager extends JFrame {
         return courseTasks;
     }
 
+    /**
+     * 주된 기능을 포함한 과제 화면을 출력하는 메서드입니다.
+     *
+     * 사용자가 직접 과제를 추가하고 삭제할 수 있으며, 추가된 과제 목록을 확인할 수 있습니다.
+     */
     // 과제 화면
     private void showTaskScreen() {
         getContentPane().removeAll();
@@ -332,13 +393,28 @@ public class TaskManager extends JFrame {
         repaint();
     }
 
-    // 과제 추가 메서드
+    /**
+     * 과제를 추가하는 메서드입니다.
+     *
+     * 과목을 선택한 후 과제를 추가할 수 있습니다.
+     * 추가된 과제는 파일로 저장됩니다.
+     *
+     * @param name 과목 이름
+     * @param description 과제 설명
+     * @param dueDate 마감일
+     */
     private void addTask(String name, String description, String dueDate) {
         tasks.add(new Task(name, description, dueDate));
         saveTasksToFile();
     }
 
-    // 과제 목록 수정 메서드
+    /**
+     * 현재 과제 목록을 업데이트하는 메서드입니다.
+     *
+     * 과제 목록을 새로 추가합니다.
+     *
+     * @param area 업데이트 할 JTextArea
+     */
     private void updateTaskArea(JTextArea area) {
         area.setText(""); // 기존 내용 지우기
         for (Task task : tasks) {
@@ -346,7 +422,13 @@ public class TaskManager extends JFrame {
         }
     }
 
-    // 과제 삭제 메서드
+    /**
+     * 주어진 인덱스에 해당하는 과제를 삭제하는 메서드입니다.
+     *
+     * 유효한 인덱스에 해당하는 과제를 목록에서 제거하고 변경된 과제 목록을 파일에 저장합니다.
+     *
+     * @param index 삭제할 과제의 인덱스
+     */
     private void deleteTask(int index) {
         if (index >= 0 && index < tasks.size()) {
             tasks.remove(index);
@@ -355,6 +437,14 @@ public class TaskManager extends JFrame {
     }
 
     // 저장 및 불러오기 메서드
+
+    /**
+     * 현재 과제 목록을 파일에 저장한느 메서드입니다.
+     *
+     * 각 과제의 과목 이름, 과제 설명 및 마감일을 구분하여 저장합니다.
+     *
+     * @throws IOException 파일 쓰기 중 발생할 수 있는 예외
+     */
     private void saveTasksToFile() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("tasks.txt"))) {
             for (Task task : tasks) {
@@ -366,6 +456,14 @@ public class TaskManager extends JFrame {
         }
     }
 
+    /**
+     * 파일에서 과제 목록을 불러오는 메서드입니다.
+     *
+     * 파일이 존재하면 과목 이름, 과제 설명 및 마감일을 불러와서 과제 목록에 추가합니다.
+     * 존재하지 않는 경우에는 빈 파일을 생성합니다.
+     *
+     * @throws IOException 파일 읽기 중 발생할 수 있는 예외
+     */
     private void loadTasksFromFile() {
         try (BufferedReader reader = new BufferedReader(new FileReader("tasks.txt"))) {
             String line;
@@ -387,7 +485,11 @@ public class TaskManager extends JFrame {
         }
     }
 
-    // 채팅 화면
+    /**
+     * 채팅 화면을 출력하는 메서드입니다.
+     *
+     * 능력 부족으로 기능적인 요소 없이 채팅방이 모여있는 UI만을 구현했습니다.
+     */
     private void showChatScreen() {
         getContentPane().removeAll();
         setLayout(new BorderLayout());
@@ -471,6 +573,17 @@ public class TaskManager extends JFrame {
     }
 
     // 메세지 패널 생성
+
+    /**
+     * 메세지 패널을 생성하는 메서드입니다.
+     *
+     * 주어진 제목과 메세지를 포함하는 JPanel을 반환합니다.
+     * 패널은 제목 레이블과 메세지 레이블로 구성되어 있습니다.
+     *
+     * @param title 패널의 제목
+     * @param message 패널의 메세지 내용
+     * @return 생성된 메세지 패널
+     */
     private JPanel createMessagePanel(String title, String message) {
         JPanel messagePanel = new JPanel();
         messagePanel.setLayout(new BorderLayout());
@@ -491,6 +604,14 @@ public class TaskManager extends JFrame {
     }
 
     // 마우스 상호작용
+
+    /**
+     * 주어진 패널에 마우스 호버 효과를 추가하는 메서드입니다.
+     *
+     * 마우스 커서를 채팅창(패널) 위에 올리면 배경색이 변경되고, 마우스 커서를 채팅창 다시 밖으로 꺼내면 원래 색으로 돌아옵니다.
+     *
+     * @param panel 효과를 추가할 JPanel
+     */
     private void addMouseHoverEffect(JPanel panel) {
         panel.addMouseListener(new MouseAdapter() {
             @Override
@@ -505,6 +626,13 @@ public class TaskManager extends JFrame {
         });
     }
 
+    /**
+     * 과제 관리 시스템의 메인 진입점입니다.
+     *
+     * TaskManager를 초기화하고, 프로그램 시작 시에 과제 데이터를 파일에서 불러옵니다.
+     *
+     * @param args 커맨드라인 인수 (사용되지 않음)
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             TaskManager manager = new TaskManager();
